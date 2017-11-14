@@ -23,13 +23,13 @@
         android:id="@+id/force_data"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
         android:layout_marginRight="16dp"
-        android:text="80"
         android:textSize="30sp"
+        app:layout_constraintLeft_toRightOf="@+id/force_title"
         app:layout_constraintRight_toRightOf="parent"
         tools:layout_editor_absoluteY="110dp"
-        app:layout_constraintLeft_toRightOf="@+id/force_title"
-        android:layout_marginLeft="8dp" />
+        tools:text="80" />
 
     <Button
         android:id="@+id/update_button"

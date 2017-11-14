@@ -1,4 +1,4 @@
-package me.jonahchin.musclebike;
+package me.jonahchin.musclebike.Fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,6 +16,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import me.jonahchin.musclebike.R;
 
 /**
  * Created by jonahchin on 2017-10-16.
@@ -60,8 +62,6 @@ public class RideFragment extends Fragment {
                 mForceRef.setValue(mForceData.getText().toString());
             }
         });
-
-
 
 
     }
