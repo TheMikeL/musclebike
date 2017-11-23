@@ -47,24 +47,24 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
 
     public class RideHolder extends  RecyclerView.ViewHolder implements View.OnClickListener{
 
-        private TextView mDateView;
-        private TextView mDurationView;
-        private TextView mStartTimeView;
-        private TextView mDistanceView;
+            private TextView mDateView;
+            private TextView mDurationView;
+            private TextView mStartTimeView;
+            private TextView mDistanceView;
 
-        public RideHolder(View itemView) {
-            super(itemView);
+            public RideHolder(View itemView) {
+                super(itemView);
 
-            mDateView = itemView.findViewById(R.id.item_date_view);
-            mDurationView = itemView.findViewById(R.id.item_duration_view);
-            mStartTimeView = itemView.findViewById(R.id.item_starttime_view);
-            mDistanceView = itemView.findViewById(R.id.item_distance_view);
+                mDateView = itemView.findViewById(R.id.item_date_view);
+                mDurationView = itemView.findViewById(R.id.item_duration_view);
+                mStartTimeView = itemView.findViewById(R.id.item_starttime_view);
+                mDistanceView = itemView.findViewById(R.id.item_distance_view);
 
-        }
+            }
 
-        @Override
-        public void onClick(View v) {
+            @Override
+            public void onClick(View v) {
 
-        }
+            }
     }
 }

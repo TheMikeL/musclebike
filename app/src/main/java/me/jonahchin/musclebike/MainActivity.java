@@ -33,6 +33,13 @@ public class MainActivity extends AppCompatActivity {
 
         mBottomNav = findViewById(R.id.bottom_nav_view);
         mBottomNav.setSelectedItemId(R.id.menu_ride);
+
+
+        FragmentManager fm = getSupportFragmentManager();
+        fm.beginTransaction()
+                .add(R.id.primary_container, new RideFragment())
+                .commit();
+
         mBottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -40,19 +47,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-//        mBottomNav.setOnNavigationItemSelectedListener();
-
-
-//        FragmentManager fm = getSupportFragmentManager();
-//        RideFragment rideFragment = (RideFragment) fm.findFragmentById(R.id.primary_container);
-//
-//        if(rideFragment == null) {
-//            rideFragment = new RideFragment();
-//            fm.beginTransaction()
-//                    .add(R.id.primary_container, rideFragment)
-//                    .commit();
-//        }
-
     }
 
 
