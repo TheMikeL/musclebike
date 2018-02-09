@@ -18,6 +18,8 @@ import me.jonahchin.musclebike.R;
 public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.RideHolder>{
 
     private List<Ride> rides;
+    onItemClickListener mClickListener;
+
 
     public HistoryListAdapter(List<Ride> rides) {
         this.rides = rides;
@@ -44,6 +46,14 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
         return rides.size();
     }
 
+    public interface onItemClickListener {
+        public void onItemClick(View view, int position);
+    }
+
+    public void setClickListener(final onItemClickListener clickListener) {
+        this.mClickListener = clickListener;
+    }
+
 
     public class RideHolder extends  RecyclerView.ViewHolder implements View.OnClickListener{
 
@@ -60,11 +70,13 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
                 mStartTimeView = itemView.findViewById(R.id.item_starttime_view);
                 mDistanceView = itemView.findViewById(R.id.item_distance_view);
 
+                itemView.setOnClickListener(this);
+
             }
 
             @Override
             public void onClick(View v) {
-
+                mClickListener.onItemClick(v, getAdapterPosition());
             }
     }
 }
