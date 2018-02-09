@@ -9,21 +9,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 
+import me.jonahchin.musclebike.Entities.Ride;
 import me.jonahchin.musclebike.Fragments.HistoryListFragment;
+import me.jonahchin.musclebike.Fragments.ResultsFragment;
 import me.jonahchin.musclebike.Fragments.RideFragment;
 import me.jonahchin.musclebike.Fragments.SettingsFragment;
+import me.jonahchin.musclebike.Interfaces.HistoryListCallbacks;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements HistoryListCallbacks{
 
     private static final String TAG = "MainActivity";
     private BottomNavigationView mBottomNav;
-
-    //frags
-    HistoryListFragment mHistoryListFragment;
-    RideFragment mRideFragment;
-    SettingsFragment mSettingsFragment;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.menu_history:
                 fragment = new HistoryListFragment();
-                Log.e(TAG, "selected history");
                 break;
             case R.id.menu_ride:
                 fragment = new RideFragment();
@@ -69,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
 
         if(fragment == null) return;
 
-        Log.e(TAG, "adding frag");
         FragmentManager fm = getSupportFragmentManager();
         fm.beginTransaction()
                 .replace(R.id.primary_container, fragment)
@@ -77,4 +72,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onListItemClick(Ride ride) {
+
+
+        Fragment fragment = ResultsFragment.newInstance(ride);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.primary_container, fragment)
+                .commit();
+    }
 }

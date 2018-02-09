@@ -1,5 +1,6 @@
 package me.jonahchin.musclebike.Fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import me.jonahchin.musclebike.Adapters.HistoryListAdapter;
 import me.jonahchin.musclebike.Entities.Ride;
+import me.jonahchin.musclebike.Interfaces.HistoryListCallbacks;
 import me.jonahchin.musclebike.R;
 
 /**
@@ -28,6 +30,8 @@ public class HistoryListFragment extends Fragment {
     private RecyclerView mHistoryRecyclerView;
     private HistoryListAdapter mHistoryAdapter;
     private TextView mTitle;
+
+    private HistoryListCallbacks mCallbacks;
 
     @Nullable
     @Override
@@ -42,18 +46,38 @@ public class HistoryListFragment extends Fragment {
         mHistoryRecyclerView = view.findViewById(R.id.history_recycler_view);
         mHistoryRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        List<Ride> rideList = new ArrayList<>();
+        final List<Ride> rideList = new ArrayList<>();
 
         for(int i = 0; i < 100; i++){
-            rideList.add(new Ride(1000, 15000, new Date(System.currentTimeMillis()), 60.9));
+            rideList.add(new Ride(10*i, 10*i+55, new Date(System.currentTimeMillis()), 60.9));
         }
+
 
         if(mHistoryAdapter == null){
             mHistoryAdapter = new HistoryListAdapter(rideList);
         }
 
+        mHistoryAdapter.setClickListener(new HistoryListAdapter.onItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                mCallbacks.onListItemClick(rideList.get(position));
+            }
+        });
+
+
+
         mHistoryRecyclerView.setAdapter(mHistoryAdapter);
 
         return view;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try{
+            mCallbacks = (HistoryListCallbacks) context;
+        } catch (ClassCastException e) {
+            Log.e(TAG, context.toString() + " must implement HistoryListCallbacks");
+        }
     }
 }

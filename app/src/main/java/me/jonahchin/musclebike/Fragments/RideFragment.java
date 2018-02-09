@@ -35,9 +35,9 @@ public class RideFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ride, container, false);
-        mForceData = view.findViewById(R.id.force_data);
-        mUpdateButton = view.findViewById(R.id.update_button);
-        setListeners();
+//        mForceData = view.findViewById(R.id.force_data);
+//        mUpdateButton = view.findViewById(R.id.update_button);
+//        setListeners();
 
         return view;
     }
