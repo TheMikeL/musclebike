@@ -1,20 +1,25 @@
 package me.jonahchin.musclebike.Fragments;
 
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
+
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.List;
 
 import me.jonahchin.musclebike.R;
 
@@ -25,6 +30,7 @@ import me.jonahchin.musclebike.R;
 
 public class RideFragment extends Fragment {
 
+
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
     DatabaseReference mRideRef = mRootRef.child("live");
     DatabaseReference mForceRef = mRideRef.child("muscle-intensity");
@@ -32,18 +38,25 @@ public class RideFragment extends Fragment {
     DatabaseReference mLeftBalRef = mRideRef.child("muscle-left");
     DatabaseReference mRightBalRef = mRideRef.child("muscle-right");
 
-
+    boolean buttonState;
     TextView mMuscleData;
     TextView mCadenceData;
     TextView mLeftBalData;
     TextView mRightBalData;
     TextView mSpeedData;
     TextView mDistanceData;
+    boolean ride;
+    TextView stopWatch;
+    long MillisecondTime, StartTime, TimeBuff, UpdateTime = 0L ;
+    int Seconds, Minutes, MilliSeconds;
+
+    Handler handler;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ride, container, false);
+        stopWatch = view.findViewById(R.id.time_value);
         mCadenceData = view.findViewById(R.id.cadence_value);
         mLeftBalData = view.findViewById(R.id.muscle_left);
         mRightBalData = view.findViewById(R.id.muscle_right);
@@ -51,13 +64,58 @@ public class RideFragment extends Fragment {
         mDistanceData = view.findViewById(R.id.distance_elapsed);
         mSpeedData = view.findViewById(R.id.speed_value);
 
-        mDistanceData.setText("10.1 km");
-        mSpeedData.setText("5.1 km/h");
+        mDistanceData.setText("10.1");
+        mSpeedData.setText("5.1");
 
+        ride = true;
+        buttonState = true;
+        final FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (buttonState){
+                    handler = new Handler() ;
+                    fab.setColorFilter(Color.parseColor("#b30000"));
+                    StartTime = SystemClock.uptimeMillis();
+                    handler.postDelayed(runnable, 0);
+                    //Start timer and distance calc
+                    buttonState=false;
+                }else{
+                    fab.setColorFilter(Color.parseColor("#1f4927"));
+                    ride = false;
+                    TimeBuff += MillisecondTime;
+                    mDistanceData.setText(
+                            String.format("%2d", Seconds));
+                    handler.removeCallbacksAndMessages(runnable);
+                    //End Ride
+                    //Save distance, elapsed time and ride ID to phone
+
+                }
+
+            }
+        });
 
         setListeners();
         return view;
     }
+
+    public Runnable runnable = new Runnable() {
+
+            public void run(){
+                if (ride) {
+                    MillisecondTime = SystemClock.uptimeMillis() - StartTime;
+                    UpdateTime = TimeBuff + MillisecondTime;
+                    Seconds = (int) (UpdateTime / 1000);
+                    Minutes = Seconds / 60;
+                    Seconds = Seconds % 60;
+                    MilliSeconds = (int) (UpdateTime % 100);
+                    stopWatch.setText(String.format("%02d", Minutes) + ":"
+                            + String.format("%02d", Seconds) + ":"
+                            + String.format("%02d", MilliSeconds));
+                    handler.postDelayed(this, 0);
+                }
+            }
+    };
 
     private void setListeners() {
         mForceRef.addValueEventListener(new ValueEventListener() {
@@ -65,8 +123,9 @@ public class RideFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Long force = dataSnapshot.getValue(Long.class);
                 String forceStr = String.valueOf(force);
-                mMuscleData.setText(forceStr + "%");
+                mMuscleData.setText(forceStr);
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
@@ -78,7 +137,7 @@ public class RideFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Long cadenceVal = dataSnapshot.getValue(Long.class);
                 String cadenceStr = String.valueOf(cadenceVal);
-                mCadenceData.setText(cadenceStr + " RPM");
+                mCadenceData.setText(cadenceStr);
             }
 
             @Override
@@ -92,7 +151,7 @@ public class RideFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Long leftBal = dataSnapshot.getValue(Long.class);
                 String leftBalStr = String.valueOf(leftBal);
-                mLeftBalData.setText(leftBalStr + "%");
+                mLeftBalData.setText(leftBalStr);
             }
 
             @Override
@@ -106,7 +165,7 @@ public class RideFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Long rightBal = dataSnapshot.getValue(Long.class);
                 String rightBalStr = String.valueOf(rightBal);
-                mRightBalData.setText(rightBalStr + "%");
+                mRightBalData.setText(rightBalStr);
             }
 
             @Override
@@ -114,7 +173,6 @@ public class RideFragment extends Fragment {
 
             }
         });
-
 
 
     }
