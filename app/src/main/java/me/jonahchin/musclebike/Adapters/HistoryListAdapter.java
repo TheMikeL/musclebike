@@ -35,10 +35,9 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
     @Override
     public void onBindViewHolder(RideHolder holder, int position) {
         Ride currentRide = rides.get(position);
-        holder.mDistanceView.setText(String.valueOf(currentRide.getTotalDistance()));
-        holder.mStartTimeView.setText(String.valueOf(currentRide.getStartTime()));
-        holder.mDurationView.setText(String.valueOf(currentRide.getStartTime()));
-        holder.mDateView.setText(currentRide.getDate().toString());
+        holder.mDistanceView.setText(String.valueOf(currentRide.getDistance()));
+        holder.mDurationView.setText(currentRide.getElapsedTime());
+        holder.mDateView.setText(String.valueOf(currentRide.getRideId()));
     }
 
     @Override
@@ -59,7 +58,6 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
 
             private TextView mDateView;
             private TextView mDurationView;
-            private TextView mStartTimeView;
             private TextView mDistanceView;
 
             public RideHolder(View itemView) {
@@ -67,7 +65,6 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
 
                 mDateView = itemView.findViewById(R.id.item_date_view);
                 mDurationView = itemView.findViewById(R.id.item_duration_view);
-                mStartTimeView = itemView.findViewById(R.id.item_starttime_view);
                 mDistanceView = itemView.findViewById(R.id.item_distance_view);
 
                 itemView.setOnClickListener(this);

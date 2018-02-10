@@ -1,8 +1,12 @@
 package me.jonahchin.musclebike.Fragments;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,15 +14,23 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +50,8 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
     private MapView mMapView;
     private GoogleMap mGoogleMap;
     private LineChart mLineChart;
+    private PieChart mZonePie;
+    private PieChart mBalancePie;
 
     public static ResultsFragment newInstance(Ride ride) {
         
@@ -57,58 +71,51 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_results, container, false);
+        View view = inflater.inflate(R.layout.fragment_results_scroll, container, false);
 
         mTitle = view.findViewById(R.id.title_bar_title);
         mTitle.setText("Ride Details");
 
+        mMapView = view.findViewById(R.id.map_view);
+        mMapView.onCreate(savedInstanceState);
+        mMapView.getMapAsync(this);
 
-        initializeTable(view);
         initializeChart(view);
+        initializePieCharts(view);
 
         return view;
     }
 
+    private void initializePieCharts(View view) {
+        mZonePie = view.findViewById(R.id.zone_pie);
+        mBalancePie = view.findViewById(R.id.balance_pie);
 
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        mMapView = view.findViewById(R.id.map_fragment);
-        if (mMapView != null) {
-            mMapView.onCreate(null);
-            mMapView.onResume();
-            mMapView.getMapAsync(this);
-        }
-    }
+        mZonePie.setHoleRadius(90);
+        mBalancePie.setHoleRadius(90);
 
-    private void initializeTable(View view) {
-        TextView timeView = view.findViewById(R.id.time_data);
-        TextView distanceView = view.findViewById(R.id.distance_data);
-        TextView muscleUseView = view.findViewById(R.id.muscle_use_data);
-        TextView PPMView = view.findViewById(R.id.ppm_data);
-        final Button chartButton = view.findViewById(R.id.chart_button);
+        mZonePie.getLegend().setEnabled(false);
+        mBalancePie.getLegend().setEnabled(false);
 
-        timeView.setText(Long.toString(mCurrentRide.getEndTime()));
-        distanceView.setText(Double.toString(mCurrentRide.getTotalDistance()));
-        muscleUseView.setText(Long.toString(mCurrentRide.getStartTime()));
-        PPMView.setText(mCurrentRide.getDate().toString());
+        mZonePie.getDescription().setText("Intensity Breakdown");
+        mBalancePie.getDescription().setText("Balance");
 
-        chartButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mLineChart.getVisibility() == View.INVISIBLE){
-                    mMapView.setVisibility(View.INVISIBLE);
-                    mLineChart.setVisibility(View.VISIBLE);
-                    chartButton.setText("Show Map");
+        List<PieEntry> entries = new ArrayList<>();
 
-                }else{
-                    mMapView.setVisibility(View.VISIBLE);
-                    mLineChart.setVisibility(View.INVISIBLE);
-                    chartButton.setText("Show Muscle Chart");
-                }
+        entries.add(new PieEntry(18.5f, ""));
+        entries.add(new PieEntry(26.7f, ""));
+        entries.add(new PieEntry(24.0f, ""));
+        entries.add(new PieEntry(30.8f, ""));
 
-            }
-        });
+        PieDataSet set = new PieDataSet(entries, "");
+
+        set.setColors(new int[] { android.R.color.holo_red_light, android.R.color.holo_green_light, android.R.color.holo_blue_light }, getContext());
+
+        PieData data = new PieData(set);
+        mZonePie.setData(data);
+        mBalancePie.setData(data);
+
+        mZonePie.invalidate();
+        mBalancePie.invalidate();
     }
 
 
@@ -124,7 +131,6 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
         LineData lineData = new LineData(dataSet);
         mLineChart.setData(lineData);
         mLineChart.invalidate();
-
     }
 
     @Override
@@ -133,7 +139,73 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
         MapsInitializer.initialize(getContext());
         
         mGoogleMap = googleMap;
-        googleMap.addMarker(new MarkerOptions().position(new LatLng(0,0)).title("Start"));
+//        mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(0,0)).title("Start"));
+
+        addPathToMap();
+
+
+    }
+
+    private void addPathToMap() {
+
+        mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(44.227957, -76.491584)).title("Start"));
+        mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(44.229661, -76.502837)).title("End"));
+        PolylineOptions pathOptions = new PolylineOptions()
+                .add(new LatLng(44.227957, -76.491584))
+                .add(new LatLng(44.228195, -76.499871))
+                .add(new LatLng(44.229661, -76.502837)).color(Color.RED);
+
+        Polyline path = mGoogleMap.addPolyline(pathOptions);
+
+        LatLngBounds AUSTRALIA = new LatLngBounds(
+                new LatLng(44.225474, -76.503977), new LatLng(44.233160, -76.490130));
+
+
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA , 15));
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mMapView != null) {
+            mMapView.onResume();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        if (mMapView != null) {
+            mMapView.onPause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mMapView != null) {
+            try {
+                mMapView.onDestroy();
+            } catch (NullPointerException e) {
+                Log.e(TAG, "Error while attempting MapView.onDestroy(), ignoring exception", e);
+            }
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (mMapView != null) {
+            mMapView.onLowMemory();
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mMapView != null) {
+            mMapView.onSaveInstanceState(outState);
+        }
     }
 
 

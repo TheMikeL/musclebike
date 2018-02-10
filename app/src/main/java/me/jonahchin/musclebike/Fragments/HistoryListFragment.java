@@ -48,9 +48,9 @@ public class HistoryListFragment extends Fragment {
 
         final List<Ride> rideList = new ArrayList<>();
 
-        for(int i = 0; i < 100; i++){
+       /* for(int i = 0; i < 100; i++){
             rideList.add(new Ride(10*i, 10*i+55, new Date(System.currentTimeMillis()), 60.9));
-        }
+        }*/
 
 
         if(mHistoryAdapter == null){

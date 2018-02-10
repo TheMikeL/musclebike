@@ -22,12 +22,14 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
     private static final String TAG = "MainActivity";
     private BottomNavigationView mBottomNav;
 
+    private AppDatabase mAppDatabase;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+        mAppDatabase = AppDatabase.getAppDatabase(getApplicationContext());
         mBottomNav = findViewById(R.id.bottom_nav_view);
         mBottomNav.setSelectedItemId(R.id.menu_ride);
 
@@ -46,6 +48,9 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
         });
     }
 
+    public AppDatabase getAppDatabase(){
+        return mAppDatabase;
+    }
 
     private void selectFragment(MenuItem item) {
 

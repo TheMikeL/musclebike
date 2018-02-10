@@ -22,17 +22,6 @@
         tools:text="October 12, 2017" />
 
     <TextView
-        android:id="@+id/item_starttime_view"
-        android:layout_width="wrap_content"
-        android:layout_height="23dp"
-        android:layout_marginRight="16dp"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/item_distance_view"
-        tools:text="10:12 PM" />
-
-    <TextView
         android:id="@+id/item_duration_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -50,8 +39,8 @@
         android:layout_marginRight="16dp"
         android:textAppearance="@style/TextAppearance.AppCompat"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/item_starttime_view"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="10 km" />
+        tools:text="10 km"
+        app:layout_constraintTop_toTopOf="@+id/item_date_view"
+        android:layout_marginTop="0dp"/>
 </android.support.constraint.ConstraintLayout>
