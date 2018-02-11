@@ -10,6 +10,7 @@ import java.util.List;
 
 import me.jonahchin.musclebike.Entities.Ride;
 import me.jonahchin.musclebike.R;
+import me.jonahchin.musclebike.Utility.StringUtil;
 
 /**
  * Created by jonahchin on 2017-11-14.
@@ -35,9 +36,9 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
     @Override
     public void onBindViewHolder(RideHolder holder, int position) {
         Ride currentRide = rides.get(position);
-        holder.mDistanceView.setText(String.valueOf(currentRide.getDistance()));
-        holder.mDurationView.setText(currentRide.getElapsedTime());
-        holder.mDateView.setText(String.valueOf(currentRide.getRideId()));
+        holder.mDistanceView.setText(String.valueOf(currentRide.getDistance()) + "km");
+        holder.mDurationView.setText(StringUtil.getHourMinuteSecondFromMillis(currentRide.getElapsedTime()));
+        holder.mDateView.setText(StringUtil.getTitleDateFromMillis(currentRide.getRideId()));
     }
 
     @Override

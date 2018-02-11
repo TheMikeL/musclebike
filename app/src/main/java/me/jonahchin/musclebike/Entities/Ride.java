@@ -2,15 +2,14 @@ package me.jonahchin.musclebike.Entities;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
-
-import java.util.Date;
 
 /**
  * Created by jonahchin on 2017-11-14.
  */
 
-@Entity(tableName = "ride")
+@Entity(tableName = "ride", indices = @Index(value = "ride_id"))
 public class Ride {
 
     @PrimaryKey
@@ -21,14 +20,14 @@ public class Ride {
     private double distance;
 
     @ColumnInfo(name = "elapsed_time")
-    private String elapsedTime;
+    private long elapsedTime;
 
     public long getRideId() {
         return rideId;
     }
 
-    public void setRideId(long ride_id) {
-        this.rideId = ride_id;
+    public void setRideId(long rideId) {
+        this.rideId = rideId;
     }
 
     public double getDistance() {
@@ -39,11 +38,11 @@ public class Ride {
         this.distance = distance;
     }
 
-    public String getElapsedTime() {
+    public long getElapsedTime() {
         return elapsedTime;
     }
 
-    public void setElapsedTime(String elapsedTime) {
+    public void setElapsedTime(long elapsedTime) {
         this.elapsedTime = elapsedTime;
     }
 

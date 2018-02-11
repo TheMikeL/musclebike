@@ -28,4 +28,7 @@ public interface RideDao {
     @Delete
     void delete(Ride ride);
 
+    @Query("DELETE FROM ride")
+    void nukeTable();
+
 }

@@ -2,6 +2,7 @@ package me.jonahchin.musclebike.Fragments;
 
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -32,11 +33,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import me.jonahchin.musclebike.Entities.Ride;
+import me.jonahchin.musclebike.Interfaces.RideDao;
+import me.jonahchin.musclebike.Interfaces.RideDatapointDao;
+import me.jonahchin.musclebike.MainActivity;
 import me.jonahchin.musclebike.R;
+import me.jonahchin.musclebike.Utility.StringUtil;
 
 /**
  * Created by jonahchin on 2017-11-22.
@@ -52,6 +59,12 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
     private LineChart mLineChart;
     private PieChart mZonePie;
     private PieChart mBalancePie;
+
+    //stats card
+    private TextView mDistanceText;
+    private TextView mTimeText;
+    private TextView mCadenceText;
+    private TextView mSpeedText;
 
     public static ResultsFragment newInstance(Ride ride) {
         
@@ -74,16 +87,52 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
         View view = inflater.inflate(R.layout.fragment_results_scroll, container, false);
 
         mTitle = view.findViewById(R.id.title_bar_title);
-        mTitle.setText("Ride Details");
+
+        mTitle.setText(StringUtil.getTitleDateFromMillis(mCurrentRide.getRideId()));
 
         mMapView = view.findViewById(R.id.map_view);
         mMapView.onCreate(savedInstanceState);
         mMapView.getMapAsync(this);
 
+        initializeStatsCard(view);
         initializeChart(view);
         initializePieCharts(view);
 
         return view;
+    }
+
+    private void initializeStatsCard(View view) {
+
+        mDistanceText = view.findViewById(R.id.distance_data_text);
+        mTimeText = view.findViewById(R.id.time_data_text);
+        mCadenceText = view.findViewById(R.id.cadence_data_text);
+        mSpeedText = view.findViewById(R.id.speed_data_text);
+
+
+
+        mDistanceText.setText(String.format("%.2fkm", mCurrentRide.getDistance()));
+        mTimeText.setText(StringUtil.getHourMinuteSecondFromMillis(mCurrentRide.getElapsedTime()));
+
+        double speed = mCurrentRide.getDistance() / (mCurrentRide.getElapsedTime() * 2.77778e-7);
+        mSpeedText.setText(String.format("%.1fkmh", speed));
+
+
+        new AsyncTask<Void, Void, Void>() {
+            final RideDatapointDao dataDao = MainActivity.mAppDatabase.rideDatapointDao();
+            double avgCadence = 0;
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                avgCadence = dataDao.getAverageCadence(mCurrentRide.getRideId());
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                mCadenceText.setText(String.format("%.2f", avgCadence));
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,(Void[]) null);
     }
 
     private void initializePieCharts(View view) {
