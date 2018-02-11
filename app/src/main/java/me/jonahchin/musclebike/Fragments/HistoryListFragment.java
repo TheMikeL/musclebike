@@ -1,6 +1,7 @@
 package me.jonahchin.musclebike.Fragments;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -17,8 +18,11 @@ import java.util.Date;
 import java.util.List;
 
 import me.jonahchin.musclebike.Adapters.HistoryListAdapter;
+import me.jonahchin.musclebike.AppDatabase;
 import me.jonahchin.musclebike.Entities.Ride;
 import me.jonahchin.musclebike.Interfaces.HistoryListCallbacks;
+import me.jonahchin.musclebike.Interfaces.RideDao;
+import me.jonahchin.musclebike.MainActivity;
 import me.jonahchin.musclebike.R;
 
 /**
@@ -32,12 +36,13 @@ public class HistoryListFragment extends Fragment {
     private TextView mTitle;
 
     private HistoryListCallbacks mCallbacks;
+    private List<Ride> mRideList;
+
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_history_list, container, false);
-
         Log.e(TAG, "Creating view for history frag");
 
         mTitle = view.findViewById(R.id.title_bar_title);
@@ -45,31 +50,57 @@ public class HistoryListFragment extends Fragment {
 
         mHistoryRecyclerView = view.findViewById(R.id.history_recycler_view);
         mHistoryRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        final RideDao dao = MainActivity.mAppDatabase.rideDao();
 
-        final List<Ride> rideList = new ArrayList<>();
 
-       /* for(int i = 0; i < 100; i++){
-            rideList.add(new Ride(10*i, 10*i+55, new Date(System.currentTimeMillis()), 60.9));
-        }*/
 
+        mRideList = new ArrayList<>();
 
         if(mHistoryAdapter == null){
-            mHistoryAdapter = new HistoryListAdapter(rideList);
+            mHistoryAdapter = new HistoryListAdapter(mRideList);
         }
 
         mHistoryAdapter.setClickListener(new HistoryListAdapter.onItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                mCallbacks.onListItemClick(rideList.get(position));
+                mCallbacks.onListItemClick(mRideList.get(position));
             }
         });
 
-
-
         mHistoryRecyclerView.setAdapter(mHistoryAdapter);
+
+        new AsyncTask<Void, Void, List<Ride>>() {
+
+            @Override
+            protected List<Ride> doInBackground(Void... params) {
+                return dao.getAll();
+            }
+
+            @Override
+            protected void onPostExecute(List<Ride> rides) {
+                super.onPostExecute(rides);
+                mRideList.clear();
+                mRideList.addAll(rides);
+                mHistoryAdapter.notifyDataSetChanged();
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,(Void[]) null);
 
         return view;
     }
+
+  /*  private void testDataBase(View view) {
+        Ride ride = new Ride();
+        ride.setRideId(10);
+        ride.setElapsedTime("5h5m");
+        ride.setDistance(10.2);
+
+        RideDao dao = MainActivity.mAppDatabase.rideDao();
+        dao.insertAll(ride);
+
+        mTitle = view.findViewById(R.id.title_bar_title);
+        Ride result = dao.findById(10);
+        mTitle.setText(result.getElapsedTime());
+    }*/
 
     @Override
     public void onAttach(Context context) {
