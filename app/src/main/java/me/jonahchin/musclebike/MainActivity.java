@@ -166,6 +166,7 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.primary_container, fragment)
+                .addToBackStack("hi")
                 .commit();
     }
 
