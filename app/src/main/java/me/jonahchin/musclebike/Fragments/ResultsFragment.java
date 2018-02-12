@@ -1,27 +1,28 @@
 package me.jonahchin.musclebike.Fragments;
 
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -30,16 +31,14 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
+import me.jonahchin.musclebike.Entities.Coordinates;
+import me.jonahchin.musclebike.Entities.LinePoint;
 import me.jonahchin.musclebike.Entities.Ride;
-import me.jonahchin.musclebike.Interfaces.RideDao;
 import me.jonahchin.musclebike.Interfaces.RideDatapointDao;
 import me.jonahchin.musclebike.MainActivity;
 import me.jonahchin.musclebike.R;
@@ -57,7 +56,7 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
     private MapView mMapView;
     private GoogleMap mGoogleMap;
     private LineChart mLineChart;
-    private PieChart mZonePie;
+    private PieChart mIntensityPie;
     private PieChart mBalancePie;
 
     //stats card
@@ -110,11 +109,11 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
 
 
 
-        mDistanceText.setText(String.format("%.2fkm", mCurrentRide.getDistance()));
+        mDistanceText.setText(String.format("%.1f", mCurrentRide.getDistance()));
         mTimeText.setText(StringUtil.getHourMinuteSecondFromMillis(mCurrentRide.getElapsedTime()));
 
         double speed = mCurrentRide.getDistance() / (mCurrentRide.getElapsedTime() * 2.77778e-7);
-        mSpeedText.setText(String.format("%.1fkmh", speed));
+        mSpeedText.setText(String.format("%.1f", speed));
 
 
         new AsyncTask<Void, Void, Void>() {
@@ -130,87 +129,203 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
             @Override
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
-                mCadenceText.setText(String.format("%.2f", avgCadence));
+                mCadenceText.setText(String.format("%.1f", avgCadence));
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,(Void[]) null);
     }
 
     private void initializePieCharts(View view) {
-        mZonePie = view.findViewById(R.id.zone_pie);
+        mIntensityPie = view.findViewById(R.id.zone_pie);
         mBalancePie = view.findViewById(R.id.balance_pie);
 
-        mZonePie.setHoleRadius(90);
-        mBalancePie.setHoleRadius(90);
+        mBalancePie.setTouchEnabled(false);
+        mIntensityPie.setTouchEnabled(false);
 
-        mZonePie.getLegend().setEnabled(false);
-        mBalancePie.getLegend().setEnabled(false);
+        mIntensityPie.setUsePercentValues(true);
+        mBalancePie.setUsePercentValues(true);
 
-        mZonePie.getDescription().setText("Intensity Breakdown");
-        mBalancePie.getDescription().setText("Balance");
+        mBalancePie.setDrawSliceText(false);
+        mIntensityPie.setDrawSliceText(false);
 
-        List<PieEntry> entries = new ArrayList<>();
+        mIntensityPie.setCenterText("Intensity");
+        mBalancePie.setCenterText("Balance");
 
-        entries.add(new PieEntry(18.5f, ""));
-        entries.add(new PieEntry(26.7f, ""));
-        entries.add(new PieEntry(24.0f, ""));
-        entries.add(new PieEntry(30.8f, ""));
+        mIntensityPie.setHoleRadius(80);
+        mBalancePie.setHoleRadius(80);
 
-        PieDataSet set = new PieDataSet(entries, "");
+//        mIntensityPie.getLegend().setEnabled(false);
+//        mBalancePie.getLegend().setEnabled(false);
 
-        set.setColors(new int[] { android.R.color.holo_red_light, android.R.color.holo_green_light, android.R.color.holo_blue_light }, getContext());
+        mIntensityPie.getDescription().setEnabled(false);
+        mBalancePie.getDescription().setEnabled(false);
 
-        PieData data = new PieData(set);
-        mZonePie.setData(data);
-        mBalancePie.setData(data);
+        new AsyncTask<Void, Void, String>() {
+            PieData balanceData;
+            PieData intensityData;
+            @Override
+            protected String doInBackground(Void... params) {
+                RideDatapointDao dataDao = MainActivity.mAppDatabase.rideDatapointDao();
 
-        mZonePie.invalidate();
-        mBalancePie.invalidate();
+                List<PieEntry> balanceEntries = new ArrayList<>();
+
+                float left = dataDao.getAverageBalance(mCurrentRide.getRideId());
+
+                balanceEntries.add(new PieEntry(100.0f - left, "Right"));
+                balanceEntries.add(new PieEntry(left, "Left"));
+
+                List<PieEntry> intensityEntries = new ArrayList<>();
+
+                int low = dataDao.getNumLowIntensities(mCurrentRide.getRideId());
+                int med = dataDao.getNumMedIntensities(mCurrentRide.getRideId());
+                int high = dataDao.getNumHighIntensities(mCurrentRide.getRideId());
+                int total = low + med + high;
+
+                float lowPercent = ((float) low / (float) total) * 100;
+                float medPercent = ((float) med / (float) total) * 100;
+                float highPercent = ((float) high / (float) total) * 100;
+
+                intensityEntries.add(new PieEntry(lowPercent, "Low"));
+                intensityEntries.add(new PieEntry(medPercent, "Medium"));
+                intensityEntries.add(new PieEntry(highPercent, "High"));
+
+                PieDataSet balanceSet = new PieDataSet(balanceEntries, "");
+                PieDataSet intensitySet = new PieDataSet(intensityEntries, "");
+
+//                balanceSet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
+//                intensitySet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
+
+
+                intensitySet.setSliceSpace(5);
+                balanceSet.setSliceSpace(5);
+
+                balanceSet.setColors(new int[] { android.R.color.holo_red_light, android.R.color.holo_green_light}, getContext());
+                intensitySet.setColors(new int[] { android.R.color.holo_red_light, android.R.color.holo_green_light, android.R.color.holo_blue_light}, getContext());
+
+                balanceData = new PieData(balanceSet);
+                intensityData = new PieData(intensitySet);
+
+                return "Complete";
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                mBalancePie.setData(balanceData);
+                mIntensityPie.setData(intensityData);
+                mBalancePie.invalidate();
+                mIntensityPie.invalidate();
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
     }
 
 
     private void initializeChart(View view) {
         mLineChart = view.findViewById(R.id.chart);
-        List<Entry> entries = new ArrayList<Entry>();
+        mLineChart.setTouchEnabled(false);
+        mLineChart.getLegend().setEnabled(false);
+        mLineChart.getDescription().setEnabled(false);
 
-        entries.add(new Entry(15,3));
-        entries.add(new Entry(19,10));
+        XAxis xAxis = mLineChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setLabelCount(5);
+        xAxis.setValueFormatter(new MyXAxisValueFormatter());
+        YAxis rightAxis = mLineChart.getAxisRight();
+        rightAxis.setEnabled(false);
 
-        LineDataSet dataSet = new LineDataSet(entries, "Your Ride");
-        dataSet.setColor(R.color.colorPrimaryDark);
-        LineData lineData = new LineData(dataSet);
-        mLineChart.setData(lineData);
-        mLineChart.invalidate();
+        YAxis leftAxis = mLineChart.getAxisLeft();
+        leftAxis.setDrawGridLines(false);
+
+        new AsyncTask<Void, Void, String>() {
+            LineData lineData;
+            @Override
+            protected String doInBackground(Void... params) {
+                RideDatapointDao dataDao = MainActivity.mAppDatabase.rideDatapointDao();
+                List<Entry> entries = new ArrayList<>();
+
+                List<LinePoint> points = dataDao.getChartData(mCurrentRide.getRideId());
+
+                for(LinePoint point : points){
+                    entries.add(new Entry((float)point.timestamp, point.muscle));
+                }
+
+                LineDataSet dataSet = new LineDataSet(entries, "Your Ride");
+                dataSet.setDrawValues(false);
+                dataSet.setColor(R.color.colorPrimaryDark);
+                lineData = new LineData(dataSet);
+
+                return "Complete";
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                mLineChart.setData(lineData);
+                mLineChart.invalidate();
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
+
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
         MapsInitializer.initialize(getContext());
-        
+
         mGoogleMap = googleMap;
-//        mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(0,0)).title("Start"));
+//        mGoogleMap.getUiSettings().setScrollGesturesEnabled(false);
 
-        addPathToMap();
+        new AsyncTask<Void, Void, String>() {
+            LatLngBounds BOUNDS;
+            PolylineOptions options;
+            MarkerOptions markerOptionsStart;
+            MarkerOptions markerOptionsEnd;
 
+            @Override
+            protected String doInBackground(Void... params) {
+                RideDatapointDao dataDao = MainActivity.mAppDatabase.rideDatapointDao();
 
-    }
-
-    private void addPathToMap() {
-
-        mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(44.227957, -76.491584)).title("Start"));
-        mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(44.229661, -76.502837)).title("End"));
-        PolylineOptions pathOptions = new PolylineOptions()
-                .add(new LatLng(44.227957, -76.491584))
-                .add(new LatLng(44.228195, -76.499871))
-                .add(new LatLng(44.229661, -76.502837)).color(Color.RED);
-
-        Polyline path = mGoogleMap.addPolyline(pathOptions);
-
-        LatLngBounds AUSTRALIA = new LatLngBounds(
-                new LatLng(44.225474, -76.503977), new LatLng(44.233160, -76.490130));
+                long rideId = mCurrentRide.getRideId();
 
 
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA , 15));
+                double minLat = dataDao.getMinLat(rideId);
+                double minLng = dataDao.getMinLong(rideId);
+                double maxLat = dataDao.getMaxLat(rideId);
+                double maxLng = dataDao.getMaxLong(rideId);
+                double deltaLat = 0.2 * (maxLat - minLat);
+                double deltaLng = 0.1 * (maxLng - minLng);
+
+                BOUNDS = new LatLngBounds(
+                        new LatLng(minLat, minLng - deltaLng), new LatLng(maxLat + deltaLat, maxLng + deltaLng));
+
+                options = new PolylineOptions();
+                markerOptionsStart = new MarkerOptions();
+                markerOptionsEnd = new MarkerOptions();
+
+                List<Coordinates> coords = dataDao.getAllCoordinates(mCurrentRide.getRideId());
+
+                markerOptionsStart.position(new LatLng(coords.get(0).lat, coords.get(0).lng)).title("Start");
+                markerOptionsEnd.position(new LatLng(coords.get(coords.size() - 1).lat, coords.get(coords.size() - 1).lng)).title("End");
+
+                for (Coordinates coord : coords) {
+                    options.add(new LatLng(coord.lat, coord.lng));
+                }
+
+                options.color(Color.BLUE);
+
+                return "Complete";
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(BOUNDS, 15));
+                mGoogleMap.addPolyline(options);
+                mGoogleMap.addMarker(markerOptionsStart);
+                mGoogleMap.addMarker(markerOptionsEnd);
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
+
     }
 
     @Override
@@ -256,6 +371,20 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
             mMapView.onSaveInstanceState(outState);
         }
     }
+
+    public class MyXAxisValueFormatter implements IAxisValueFormatter {
+
+
+        @Override
+        public String getFormattedValue(float value, AxisBase axis) {
+            // "value" represents the position of the label on the axis (x or y)
+
+             return StringUtil.getMinutesFromMillis(value);
+        }
+
+    }
+
+
 
 
 }

@@ -52,8 +52,6 @@ public class HistoryListFragment extends Fragment {
         mHistoryRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         final RideDao dao = MainActivity.mAppDatabase.rideDao();
 
-
-
         mRideList = new ArrayList<>();
 
         if(mHistoryAdapter == null){
@@ -87,20 +85,6 @@ public class HistoryListFragment extends Fragment {
 
         return view;
     }
-
-  /*  private void testDataBase(View view) {
-        Ride ride = new Ride();
-        ride.setRideId(10);
-        ride.setElapsedTime("5h5m");
-        ride.setDistance(10.2);
-
-        RideDao dao = MainActivity.mAppDatabase.rideDao();
-        dao.insertAll(ride);
-
-        mTitle = view.findViewById(R.id.title_bar_title);
-        Ride result = dao.findById(10);
-        mTitle.setText(result.getElapsedTime());
-    }*/
 
     @Override
     public void onAttach(Context context) {

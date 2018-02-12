@@ -58,8 +58,8 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
             }
         });
 
-//        DEBUG_RIDE_DATA();
 //        DEBUG_DELETE_RIDES();
+//        DEBUG_RIDE_DATA();
     }
 
     private void DEBUG_DELETE_RIDES() {
@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
                 Log.i(TAG, "completed deletion: " + s);
+//                DEBUG_RIDE_DATA();
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
 
@@ -96,22 +97,14 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
                 ride.setElapsedTime(3242000);
                 ride.setDistance(10.20);
 
+                dao.insertAll(ride);
 
-                long rideIdTwo = System.currentTimeMillis() + 10;
-
-                Ride ride2 = new Ride();
-                ride2.setRideId(rideIdTwo);
-                ride2.setElapsedTime(354399);
-                ride2.setDistance(50);
-
-                dao.insertAll(ride, ride2);
-
-                for(int i = 0; i < 10; i++){
+                for(int i = 0; i < 100; i++){
                     RideDatapoint point = new RideDatapoint();
-                    point.setTimestamp(i);
+                    point.setTimestamp(i * 1000);
                     point.setCadence(10*i);
-                    point.setMuscle(70);
-                    point.setBalance(40+i);
+                    point.setMuscle(i);
+                    point.setBalance(i);
                     point.setLat(44.229 + (i * 0.05));
                     point.setLng(-76.505 + (i * 0.05));
                     point.setRideId(rideIdOne);
@@ -155,7 +148,6 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
 
     @Override
     public void onListItemClick(Ride ride) {
-
 
         Fragment fragment = ResultsFragment.newInstance(ride);
         getSupportFragmentManager()

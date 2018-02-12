@@ -90,4 +90,6 @@ public class RideDatapoint {
     public void setLng(double lng) {
         this.lng = lng;
     }
+
+
 }

@@ -1,5 +1,7 @@
 package me.jonahchin.musclebike.Utility;
 
+import android.annotation.SuppressLint;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -13,6 +15,7 @@ public class StringUtil {
         return new SimpleDateFormat("MMM d, yyyy - hh:mm aaa").format(new Date(timestamp));
     }
 
+    @SuppressLint("DefaultLocale")
     public static String getHourMinuteSecondFromMillis(long timestamp) {
 
         if(timestamp > TimeUnit.HOURS.toMillis(1)){
@@ -29,5 +32,9 @@ public class StringUtil {
                 TimeUnit.MILLISECONDS.toSeconds(timestamp) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timestamp))
         );
+    }
+
+    public static String getMinutesFromMillis(float timestamp) {
+        return String.format("%dm", TimeUnit.MILLISECONDS.toMinutes((long)timestamp));
     }
 }
