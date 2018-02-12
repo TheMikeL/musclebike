@@ -53,6 +53,7 @@ public class RideFragment extends Fragment{
     DatabaseReference mForceRef = mRideRef.child("muscle");
     DatabaseReference mCadenceRef = mRideRef.child("cadence");
     DatabaseReference mBalRef = mRideRef.child("balance");
+    DatabaseReference mPyRef = mRootRef.child("pyStart");
 
     boolean buttonState;
     TextView mMuscleData;
@@ -136,6 +137,7 @@ public class RideFragment extends Fragment{
                     long total_elapsed_time = MillisecondTime;
                     updateRide(total_elapsed_time, distance_covered);
                     stopLocationUpdates();
+                    mPyRef.setValue(false);
                     handler.removeCallbacksAndMessages(runnable);
                     ((MainActivity) getActivity()).mBottomNav.setVisibility(View.VISIBLE);
             }
