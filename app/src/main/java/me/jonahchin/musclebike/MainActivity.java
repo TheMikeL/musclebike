@@ -1,5 +1,6 @@
 package me.jonahchin.musclebike;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,6 +10,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,18 +18,20 @@ import java.util.List;
 import me.jonahchin.musclebike.Entities.Ride;
 import me.jonahchin.musclebike.Entities.RideDatapoint;
 import me.jonahchin.musclebike.Fragments.HistoryListFragment;
+import me.jonahchin.musclebike.Fragments.HomeFragment;
 import me.jonahchin.musclebike.Fragments.ResultsFragment;
 import me.jonahchin.musclebike.Fragments.RideFragment;
 import me.jonahchin.musclebike.Fragments.SettingsFragment;
 import me.jonahchin.musclebike.Interfaces.HistoryListCallbacks;
+import me.jonahchin.musclebike.Interfaces.HomePageCallbacks;
 import me.jonahchin.musclebike.Interfaces.RideDao;
 import me.jonahchin.musclebike.Interfaces.RideDatapointDao;
 
 
-public class MainActivity extends AppCompatActivity implements HistoryListCallbacks{
+public class MainActivity extends AppCompatActivity implements HistoryListCallbacks, HomePageCallbacks{
 
     private static final String TAG = "MainActivity";
-    private BottomNavigationView mBottomNav;
+    public BottomNavigationView mBottomNav;
 
     public static AppDatabase mAppDatabase;
 
@@ -43,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
 
         FragmentManager fm = getSupportFragmentManager();
         fm.beginTransaction()
-                .add(R.id.primary_container, new RideFragment())
+                .add(R.id.primary_container, new HomeFragment())
                 .commit();
 
         mBottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -77,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
 
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void DEBUG_RIDE_DATA() {
         new AsyncTask<Void, Void, String>() {
 
@@ -132,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
                 fragment = new HistoryListFragment();
                 break;
             case R.id.menu_ride:
-                fragment = new RideFragment();
+                fragment = new HomeFragment();
                 break;
             case R.id.menu_settings:
                 fragment = new SettingsFragment();
@@ -153,6 +158,15 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
 
 
         Fragment fragment = ResultsFragment.newInstance(ride);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.primary_container, fragment)
+                .commit();
+    }
+
+    @Override
+    public void onStartButtonClick() {
+        Fragment fragment = new RideFragment();
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.primary_container, fragment)

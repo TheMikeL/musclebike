@@ -1,9 +1,10 @@
 package me.jonahchin.musclebike.Fragments;
 
-import android.content.Intent;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -16,11 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
-
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -34,12 +31,16 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.DecimalFormat;
-import java.util.List;
 
+import me.jonahchin.musclebike.Entities.Ride;
+import me.jonahchin.musclebike.Entities.RideDatapoint;
+import me.jonahchin.musclebike.Interfaces.RideDao;
+import me.jonahchin.musclebike.Interfaces.RideDatapointDao;
 import me.jonahchin.musclebike.MainActivity;
 import me.jonahchin.musclebike.R;
 
 import static java.lang.Double.parseDouble;
+import static me.jonahchin.musclebike.MainActivity.mAppDatabase;
 
 /**
  * Created by jonahchin on 2017-10-16.
@@ -47,14 +48,11 @@ import static java.lang.Double.parseDouble;
  */
 
 public class RideFragment extends Fragment{
-
-
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
-    DatabaseReference mRideRef = mRootRef.child("live");
-    DatabaseReference mForceRef = mRideRef.child("muscle-intensity");
+    DatabaseReference mRideRef = mRootRef.child("livetest");
+    DatabaseReference mForceRef = mRideRef.child("muscle");
     DatabaseReference mCadenceRef = mRideRef.child("cadence");
-    DatabaseReference mLeftBalRef = mRideRef.child("muscle-left");
-    DatabaseReference mRightBalRef = mRideRef.child("muscle-right");
+    DatabaseReference mBalRef = mRideRef.child("balance");
 
     boolean buttonState;
     TextView mMuscleData;
@@ -63,7 +61,12 @@ public class RideFragment extends Fragment{
     TextView mRightBalData;
     TextView mSpeedData;
     TextView mDistanceData;
-    boolean ride;
+    int cadenceVal;
+    int balanceVal;
+    int muscleForce;
+
+
+    boolean riding;
     TextView stopWatch;
     long MillisecondTime, StartTime, TimeBuff, UpdateTime = 0L ;
     int Seconds, Minutes, MilliSeconds, Hours;
@@ -71,6 +74,7 @@ public class RideFragment extends Fragment{
     double prevLat, prevLong, currLat, currLong;
     double distance_covered;
 
+    private Ride mCurrentRide;
 
     Handler handler;
 
@@ -89,6 +93,11 @@ public class RideFragment extends Fragment{
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ride, container, false);
+
+
+
+        mCurrentRide = new Ride();
+
         stopWatch = view.findViewById(R.id.time_value);
         mCadenceData = view.findViewById(R.id.cadence_value);
         mLeftBalData = view.findViewById(R.id.muscle_left);
@@ -102,42 +111,36 @@ public class RideFragment extends Fragment{
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
 
-        ride = true;
+        riding = true;
 
         buttonState = true;
         final FloatingActionButton fab = view.findViewById(R.id.fab);
 
+        initializeLocation();
+
+        handler = new Handler() ;
+        StartTime = SystemClock.uptimeMillis();
+        handler.postDelayed(runnable, 0);
+        mCurrentRide.setRideId(System.currentTimeMillis());
+        addNewRide();
+        locationCallBacks();
+        startLocationUpdates();
+        setListeners();
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (buttonState){
-                    initializeLocation();
-
-                    handler = new Handler() ;
-                    fab.setColorFilter(Color.parseColor("#b30000"));
-                    StartTime = SystemClock.uptimeMillis();
-                    handler.postDelayed(runnable, 0);
-                    final long rideID = System.currentTimeMillis(); //Save this
-                    locationCallBacks();
-                    startLocationUpdates();
-
-                    //Start timer and distance calc
-                    buttonState = false;
-                }else{
-                    fab.setColorFilter(Color.parseColor("#1f4927"));
-                    ride = false;
+                    riding = false;
                     TimeBuff += MillisecondTime;
-                    String elapsed_time = String.format("%2dm%2ds", Minutes, Seconds).trim();
-                    mDistanceData.setText(String.valueOf(distance_covered));
+                    long total_elapsed_time = MillisecondTime;
+                    updateRide(total_elapsed_time, distance_covered);
                     stopLocationUpdates();
                     handler.removeCallbacksAndMessages(runnable);
-                    //End Ride
-                    //Save distance, elapsed time and ride ID to phone
-                }
+                    ((MainActivity) getActivity()).mBottomNav.setVisibility(View.VISIBLE);
             }
-        });
+            });
 
-        setListeners();
+
         return view;
     }
 
@@ -155,10 +158,6 @@ public class RideFragment extends Fragment{
                 initialLongitude = location.getLongitude();
                 prevLat = initialLatitude;
                 prevLong = initialLongitude;
-                if (initialLatitude != 0)
-                    Toast.makeText(getActivity(),String.valueOf(initialLatitude) + ',' + String.valueOf(initialLongitude),Toast.LENGTH_LONG).show();
-                else
-                    Toast.makeText(getActivity(),"no Lats",Toast.LENGTH_LONG).show();
                 if (location != null) {
                     // Logic to handle location object
                 }
@@ -168,11 +167,16 @@ public class RideFragment extends Fragment{
 
     private void locationCallBacks(){
         mLocationCallback = new LocationCallback() {
+            DecimalFormat speedF = new DecimalFormat("#.#");
             @Override
             public void onLocationResult(LocationResult locationResult) {
 
                 for (Location location : locationResult.getLocations()) {
-
+                    if (location.hasSpeed()) {
+                        mSpeedData.setText(String.valueOf(speedF.format(location.getSpeed() * 3.6)));
+                    }else{
+                        mSpeedData.setText("0");
+                    }
                     currLat = location.getLatitude();
                     currLong = location.getLongitude();
 //                    Toast.makeText(getActivity(),String.valueOf(prevLat) + ',' + String.valueOf(currLat) +","+ String.valueOf(prevLong) + ',' + String.valueOf(currLong),Toast.LENGTH_SHORT).show();
@@ -193,9 +197,6 @@ public class RideFragment extends Fragment{
         currLat= parseDouble(df.format(currLat));
         currLong= parseDouble(df.format(currLong));
         currLong= parseDouble(df.format(currLong));
-//        Toast.makeText(getActivity(),df.format(prevLat) + ',' + df.format(prevLong) + ',' + df.format(currLat) + ',' + df.format(currLong),Toast.LENGTH_LONG).show();
-
-
         double dLat = Math.toRadians(currLat-prevLat);
         double dLon = Math.toRadians(Math.abs(currLong)-Math.abs(prevLong));
         double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -232,7 +233,7 @@ public class RideFragment extends Fragment{
     public Runnable runnable = new Runnable() {
 
             public void run(){
-                if (ride) {
+                if (riding) {
                     MillisecondTime = SystemClock.uptimeMillis() - StartTime;
                     UpdateTime = TimeBuff + MillisecondTime;
                     Seconds = (int) (UpdateTime / 1000);
@@ -261,8 +262,8 @@ public class RideFragment extends Fragment{
         mForceRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Long force = dataSnapshot.getValue(Long.class);
-                String forceStr = String.valueOf(force);
+                muscleForce = dataSnapshot.getValue(Integer.class);
+                String forceStr = String.valueOf(muscleForce);
                 mMuscleData.setText(forceStr);
             }
 
@@ -275,9 +276,10 @@ public class RideFragment extends Fragment{
         mCadenceRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Long cadenceVal = dataSnapshot.getValue(Long.class);
+                cadenceVal = dataSnapshot.getValue(Integer.class);
                 String cadenceStr = String.valueOf(cadenceVal);
                 mCadenceData.setText(cadenceStr);
+
             }
 
             @Override
@@ -286,25 +288,13 @@ public class RideFragment extends Fragment{
             }
         });
 
-        mLeftBalRef.addValueEventListener(new ValueEventListener() {
+        mBalRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Long leftBal = dataSnapshot.getValue(Long.class);
-                String leftBalStr = String.valueOf(leftBal);
-                mLeftBalData.setText(leftBalStr);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        mRightBalRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Long rightBal = dataSnapshot.getValue(Long.class);
-                String rightBalStr = String.valueOf(rightBal);
+                balanceVal = dataSnapshot.getValue(Integer.class);
+                String rightBalStr = String.valueOf(100-balanceVal);
+                String balanceStr = String.valueOf(balanceVal);
+                mLeftBalData.setText(balanceStr);
                 mRightBalData.setText(rightBalStr);
             }
 
@@ -314,6 +304,79 @@ public class RideFragment extends Fragment{
             }
         });
 
+        mRideRef.addValueEventListener(new ValueEventListener() {
+            @SuppressLint("StaticFieldLeak")
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                addNewDataPoint();
+            }
 
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
+
+    @SuppressLint("StaticFieldLeak")
+    public void addNewRide(){
+        new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected String doInBackground(Void... params) {
+                RideDao dao = mAppDatabase.rideDao();
+
+                dao.insertAll(mCurrentRide);
+
+
+                return "Complete";
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void updateRide(final long time, final double distance){
+        new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected String doInBackground(Void... params) {
+                RideDao dao = mAppDatabase.rideDao();
+
+                mCurrentRide.setElapsedTime(time);
+                mCurrentRide.setDistance(distance);
+
+                dao.updateRides(mCurrentRide);
+
+                return "Complete";
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void addNewDataPoint(){
+        new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected String doInBackground(Void... params) {
+                RideDatapointDao dataDao = mAppDatabase.rideDatapointDao();
+                RideDatapoint point = new RideDatapoint();
+                point.setTimestamp(MillisecondTime);
+                point.setCadence(cadenceVal);
+                point.setMuscle(muscleForce);
+                point.setBalance(balanceVal);
+                point.setLat(currLat);
+                point.setLng(currLong);
+                point.setRideId(mCurrentRide.getRideId());
+
+                dataDao.insertAll(point);
+
+                return "Complete Data Point";
+            }
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
+    }
+
 }
