@@ -44,7 +44,7 @@ public class SimpleEntityReadWriteTest {
     public void writeUserAndReadInList() throws Exception {
         Ride ride = new Ride();
         ride.setRideId(10);
-        ride.setElapsedTime("5h5m");
+        ride.setElapsedTime(10);
         ride.setDistance(10.2);
         mRideDao.insertAll(ride);
 
