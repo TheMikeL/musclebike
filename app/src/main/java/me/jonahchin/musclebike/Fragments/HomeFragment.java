@@ -11,6 +11,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import me.jonahchin.musclebike.Interfaces.HomePageCallbacks;
 import me.jonahchin.musclebike.MainActivity;
 import me.jonahchin.musclebike.R;
@@ -22,6 +28,8 @@ public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
     private HomePageCallbacks mCallbacks;
+    DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
+    DatabaseReference mPyRef = mRootRef.child("pyStart");
 
 
     public HomeFragment() {
@@ -37,6 +45,7 @@ public class HomeFragment extends Fragment {
         start_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mPyRef.setValue(true);
                 ((MainActivity) getActivity()).mBottomNav.setVisibility(View.GONE);
                 mCallbacks.onStartButtonClick();
 

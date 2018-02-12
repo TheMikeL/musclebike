@@ -117,15 +117,16 @@ public class RideFragment extends Fragment{
         final FloatingActionButton fab = view.findViewById(R.id.fab);
 
         initializeLocation();
-
-        handler = new Handler() ;
-        StartTime = SystemClock.uptimeMillis();
-        handler.postDelayed(runnable, 0);
-        mCurrentRide.setRideId(System.currentTimeMillis());
-        addNewRide();
-        locationCallBacks();
-        startLocationUpdates();
-        setListeners();
+        if (riding == true) {
+            handler = new Handler();
+            StartTime = SystemClock.uptimeMillis();
+            handler.postDelayed(runnable, 0);
+            mCurrentRide.setRideId(System.currentTimeMillis());
+            addNewRide();
+            locationCallBacks();
+            startLocationUpdates();
+            setListeners();
+        }
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -308,7 +309,8 @@ public class RideFragment extends Fragment{
             @SuppressLint("StaticFieldLeak")
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                addNewDataPoint();
+                if (riding == true)
+                    addNewDataPoint();
             }
 
             @Override
