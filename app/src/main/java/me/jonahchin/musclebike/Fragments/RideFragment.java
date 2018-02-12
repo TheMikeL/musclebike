@@ -1,5 +1,6 @@
 package me.jonahchin.musclebike.Fragments;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -47,7 +48,7 @@ import static me.jonahchin.musclebike.MainActivity.mAppDatabase;
  * Fragment containing info that cyclist will see during ride
  */
 
-public class RideFragment extends Fragment{
+public class RideFragment extends Fragment {
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
     DatabaseReference mRideRef = mRootRef.child("livetest");
     DatabaseReference mForceRef = mRideRef.child("muscle");
@@ -69,7 +70,7 @@ public class RideFragment extends Fragment{
 
     boolean riding;
     TextView stopWatch;
-    long MillisecondTime, StartTime, TimeBuff, UpdateTime = 0L ;
+    long MillisecondTime, StartTime, TimeBuff, UpdateTime = 0L;
     int Seconds, Minutes, MilliSeconds, Hours;
     double initialLatitude, initialLongitude;
     double prevLat, prevLong, currLat, currLong;
@@ -94,7 +95,6 @@ public class RideFragment extends Fragment{
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ride, container, false);
-
 
 
         mCurrentRide = new Ride();
@@ -132,27 +132,24 @@ public class RideFragment extends Fragment{
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    riding = false;
-                    TimeBuff += MillisecondTime;
-                    long total_elapsed_time = MillisecondTime;
-                    updateRide(total_elapsed_time, distance_covered);
-                    stopLocationUpdates();
-                    mPyRef.setValue(false);
-                    handler.removeCallbacksAndMessages(runnable);
-                    ((MainActivity) getActivity()).mBottomNav.setVisibility(View.VISIBLE);
+                riding = false;
+                TimeBuff += MillisecondTime;
+                long total_elapsed_time = MillisecondTime;
+                updateRide(total_elapsed_time, distance_covered);
+                stopLocationUpdates();
+                mPyRef.setValue(false);
+                handler.removeCallbacksAndMessages(runnable);
+                ((MainActivity) getActivity()).mBottomNav.setVisibility(View.VISIBLE);
             }
-            });
+        });
 
 
         return view;
     }
 
-    private void initializeLocation(){
-
-        if ( ContextCompat.checkSelfPermission( getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-
-            ActivityCompat.requestPermissions( getActivity(), new String[] {  android.Manifest.permission.ACCESS_COARSE_LOCATION  },
-                    11);
+    private void initializeLocation() {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
         }
         mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override

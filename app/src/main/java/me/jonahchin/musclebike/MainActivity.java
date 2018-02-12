@@ -1,12 +1,17 @@
 package me.jonahchin.musclebike;
 
+import android.*;
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -43,6 +48,14 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
         mAppDatabase = AppDatabase.getAppDatabase(getApplicationContext());
         mBottomNav = findViewById(R.id.bottom_nav_view);
         mBottomNav.setSelectedItemId(R.id.menu_ride);
+
+
+        if ( (ContextCompat.checkSelfPermission( this, Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED)) {
+
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 12);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 13);
+
+        }
 
 
         FragmentManager fm = getSupportFragmentManager();
