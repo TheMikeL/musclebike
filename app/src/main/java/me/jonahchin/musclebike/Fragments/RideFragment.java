@@ -165,7 +165,7 @@ public class RideFragment extends Fragment {
             public void onSuccess(Location location) {
                 initialLatitude = location.getLatitude();
                 initialLongitude = location.getLongitude();
-                if (initialLatitude != 0.0 || initialLongitude != 0)
+                if (initialLatitude < 0 || initialLongitude > 0)
                     locationCheck = true;
                 prevLat = initialLatitude;
                 prevLong = initialLongitude;
