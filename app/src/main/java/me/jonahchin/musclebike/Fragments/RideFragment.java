@@ -2,6 +2,7 @@ package me.jonahchin.musclebike.Fragments;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -14,6 +15,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,11 +37,13 @@ import java.text.DecimalFormat;
 
 import me.jonahchin.musclebike.Entities.Ride;
 import me.jonahchin.musclebike.Entities.RideDatapoint;
+import me.jonahchin.musclebike.Interfaces.HistoryListCallbacks;
 import me.jonahchin.musclebike.Interfaces.RideDao;
 import me.jonahchin.musclebike.Interfaces.RideDatapointDao;
 import me.jonahchin.musclebike.MainActivity;
 import me.jonahchin.musclebike.R;
 
+import static com.facebook.stetho.inspector.network.ResponseHandlingInputStream.TAG;
 import static java.lang.Double.parseDouble;
 import static me.jonahchin.musclebike.MainActivity.mAppDatabase;
 
@@ -66,6 +70,7 @@ public class RideFragment extends Fragment {
     int cadenceVal;
     int balanceVal;
     int muscleForce;
+    boolean locationCheck;
 
 
     boolean riding;
@@ -77,6 +82,7 @@ public class RideFragment extends Fragment {
     double distance_covered;
 
     private Ride mCurrentRide;
+    private HistoryListCallbacks mCallbacks;
 
     Handler handler;
 
@@ -138,8 +144,11 @@ public class RideFragment extends Fragment {
                 updateRide(total_elapsed_time, distance_covered);
                 stopLocationUpdates();
                 mPyRef.setValue(false);
+                locationCheck = false;
                 handler.removeCallbacksAndMessages(runnable);
                 ((MainActivity) getActivity()).mBottomNav.setVisibility(View.VISIBLE);
+                mCallbacks.onListItemClick(mCurrentRide);
+
             }
         });
 
@@ -156,6 +165,8 @@ public class RideFragment extends Fragment {
             public void onSuccess(Location location) {
                 initialLatitude = location.getLatitude();
                 initialLongitude = location.getLongitude();
+                if (initialLatitude != 0.0 || initialLongitude != 0)
+                    locationCheck = true;
                 prevLat = initialLatitude;
                 prevLong = initialLongitude;
                 if (location != null) {
@@ -361,15 +372,17 @@ public class RideFragment extends Fragment {
             protected String doInBackground(Void... params) {
                 RideDatapointDao dataDao = mAppDatabase.rideDatapointDao();
                 RideDatapoint point = new RideDatapoint();
-                point.setTimestamp(MillisecondTime);
-                point.setCadence(cadenceVal);
-                point.setMuscle(muscleForce);
-                point.setBalance(balanceVal);
-                point.setLat(currLat);
-                point.setLng(currLong);
-                point.setRideId(mCurrentRide.getRideId());
+                if (locationCheck == true) {
+                    point.setTimestamp(MillisecondTime);
+                    point.setCadence(cadenceVal);
+                    point.setMuscle(muscleForce);
+                    point.setBalance(balanceVal);
+                    point.setLat(currLat);
+                    point.setLng(currLong);
+                    point.setRideId(mCurrentRide.getRideId());
 
-                dataDao.insertAll(point);
+                    dataDao.insertAll(point);
+                }
 
                 return "Complete Data Point";
             }
@@ -378,6 +391,16 @@ public class RideFragment extends Fragment {
                 super.onPostExecute(s);
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try{
+            mCallbacks = (HistoryListCallbacks) context;
+        } catch (ClassCastException e) {
+            Log.e(TAG, context.toString() + " must implement history");
+        }
     }
 
 }
