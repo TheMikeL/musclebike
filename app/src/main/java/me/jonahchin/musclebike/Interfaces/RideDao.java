@@ -17,7 +17,7 @@ import me.jonahchin.musclebike.Entities.Ride;
 @Dao
 public interface RideDao {
 
-    @Query("SELECT * FROM ride")
+    @Query("SELECT * FROM ride ORDER BY ride_id DESC")
     List<Ride> getAll();
 
     @Query("SELECT * FROM ride WHERE ride_id = :rideId")

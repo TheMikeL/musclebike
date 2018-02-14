@@ -152,9 +152,6 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
         mIntensityPie.setHoleRadius(70);
         mBalancePie.setHoleRadius(70);
 
-//        mIntensityPie.getLegend().setEnabled(false);
-//        mBalancePie.getLegend().setEnabled(false);
-
         mIntensityPie.getDescription().setEnabled(false);
         mBalancePie.getDescription().setEnabled(false);
 
@@ -190,7 +187,6 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
                 PieDataSet balanceSet = new PieDataSet(balanceEntries, "");
                 PieDataSet intensitySet = new PieDataSet(intensityEntries, "");
 
-
                 intensitySet.setSliceSpace(5);
                 balanceSet.setSliceSpace(5);
 
@@ -205,14 +201,13 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
                 balanceData.setValueFormatter(new PercentFormatter());
                 intensityData.setValueFormatter(new PercentFormatter());
 
-
-
                 return "Complete";
             }
 
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
+
                 mBalancePie.setData(balanceData);
                 mIntensityPie.setData(intensityData);
                 mBalancePie.invalidate();
@@ -241,6 +236,7 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
 
         new AsyncTask<Void, Void, String>() {
             LineData lineData;
+            boolean hasData;
             @Override
             protected String doInBackground(Void... params) {
                 RideDatapointDao dataDao = MainActivity.mAppDatabase.rideDatapointDao();
@@ -251,21 +247,25 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
                 for(LinePoint point : points){
                     entries.add(new Entry((float)point.timestamp, point.muscle));
                 }
-
-                LineDataSet dataSet = new LineDataSet(entries, "Your Ride");
-                dataSet.setDrawCircles(false);
-                dataSet.setDrawValues(false);
-                dataSet.setColor(R.color.colorPrimaryDark);
-                lineData = new LineData(dataSet);
-
+                hasData = false;
+                if(entries.size() > 0){
+                    hasData = true;
+                    LineDataSet dataSet = new LineDataSet(entries, "Your Ride");
+                    dataSet.setDrawCircles(false);
+                    dataSet.setDrawValues(false);
+                    dataSet.setColor(R.color.colorPrimaryDark);
+                    lineData = new LineData(dataSet);
+                }
                 return "Complete";
             }
 
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
-                mLineChart.setData(lineData);
-                mLineChart.invalidate();
+                if(hasData){
+                    mLineChart.setData(lineData);
+                    mLineChart.invalidate();
+                }
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
 
@@ -284,13 +284,13 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
             PolylineOptions options;
             MarkerOptions markerOptionsStart;
             MarkerOptions markerOptionsEnd;
+            boolean hasData;
 
             @Override
             protected String doInBackground(Void... params) {
                 RideDatapointDao dataDao = MainActivity.mAppDatabase.rideDatapointDao();
 
                 long rideId = mCurrentRide.getRideId();
-
 
                 double minLat = dataDao.getMinLat(rideId);
                 double minLng = dataDao.getMinLong(rideId);
@@ -307,15 +307,18 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
                 markerOptionsEnd = new MarkerOptions();
 
                 List<Coordinates> coords = dataDao.getAllCoordinates(mCurrentRide.getRideId());
+                hasData = false;
+                if(coords.size() > 0){
+                    hasData = true;
+                    markerOptionsStart.position(new LatLng(coords.get(0).lat, coords.get(0).lng)).title("Start");
+                    markerOptionsEnd.position(new LatLng(coords.get(coords.size() - 1).lat, coords.get(coords.size() - 1).lng)).title("End");
 
-                markerOptionsStart.position(new LatLng(coords.get(0).lat, coords.get(0).lng)).title("Start");
-                markerOptionsEnd.position(new LatLng(coords.get(coords.size() - 1).lat, coords.get(coords.size() - 1).lng)).title("End");
+                    for (Coordinates coord : coords) {
+                        options.add(new LatLng(coord.lat, coord.lng));
+                    }
 
-                for (Coordinates coord : coords) {
-                    options.add(new LatLng(coord.lat, coord.lng));
+                    options.color(Color.BLUE);
                 }
-
-                options.color(Color.BLUE);
 
                 return "Complete";
             }
@@ -323,10 +326,12 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
-                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(BOUNDS, 15));
-                mGoogleMap.addPolyline(options);
-                mGoogleMap.addMarker(markerOptionsStart);
-                mGoogleMap.addMarker(markerOptionsEnd);
+                if(hasData) {
+                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(BOUNDS, 15));
+                    mGoogleMap.addPolyline(options);
+                    mGoogleMap.addMarker(markerOptionsStart);
+                    mGoogleMap.addMarker(markerOptionsEnd);
+                }
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
 
