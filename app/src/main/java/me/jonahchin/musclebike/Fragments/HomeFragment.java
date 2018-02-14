@@ -46,7 +46,6 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 mPyRef.setValue(true);
-                ((MainActivity) getActivity()).mBottomNav.setVisibility(View.GONE);
                 mCallbacks.onStartButtonClick();
 
             }

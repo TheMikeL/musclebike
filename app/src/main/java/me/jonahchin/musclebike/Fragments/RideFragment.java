@@ -113,9 +113,6 @@ public class RideFragment extends Fragment {
         mDistanceData = view.findViewById(R.id.distance_elapsed);
         mSpeedData = view.findViewById(R.id.speed_value);
 
-        mDistanceData.setText("10.1");
-        mSpeedData.setText("5.1");
-
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
 
         riding = true;
@@ -125,6 +122,7 @@ public class RideFragment extends Fragment {
 
         initializeLocation();
         if (riding == true) {
+            ((MainActivity) getActivity()).mBottomNav.setVisibility(View.GONE);
             handler = new Handler();
             StartTime = SystemClock.uptimeMillis();
             handler.postDelayed(runnable, 0);
