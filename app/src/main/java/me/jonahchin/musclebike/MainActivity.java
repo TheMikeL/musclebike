@@ -108,18 +108,22 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
                 Ride ride = new Ride();
                 ride.setRideId(rideIdOne);
                 ride.setElapsedTime(3242000);
-                ride.setDistance(10.20);
+                ride.setDistance(7.20);
 
                 dao.insertAll(ride);
 
-                for(int i = 0; i < 100; i++){
+                for(int i = 0; i < 3242; i++){
                     RideDatapoint point = new RideDatapoint();
                     point.setTimestamp(i * 1000);
-                    point.setCadence(10*i);
-                    point.setMuscle(i);
-                    point.setBalance(i);
-                    point.setLat(44.229 + (i * 0.05));
-                    point.setLng(-76.505 + (i * 0.05));
+                    point.setCadence(60.9);
+                    if(i < 1000) point.setMuscle(20);
+                    else if(i < 2000 && i >= 1000) point.setMuscle(20 + (i * 0.03));
+                    else if(i >= 2000 && i < 2500) point.setMuscle(80);
+                    else if(i >= 2500 && i < 3000) point.setMuscle(80 - (i*0.02));
+                    else point.setMuscle(20);
+                    point.setBalance(48);
+                    point.setLat(44.229);
+                    point.setLng(-76.505);
                     point.setRideId(rideIdOne);
                     dataDao.insertAll(point);
                 }

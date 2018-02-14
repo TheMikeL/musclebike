@@ -234,6 +234,31 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
         YAxis leftAxis = mLineChart.getAxisLeft();
         leftAxis.setDrawGridLines(false);
 
+
+        /* ------ DEBUG ------- */
+/*        List<Entry> entries = new ArrayList<>();
+        entries.add(new Entry(0, 10));
+        entries.add(new Entry(700000, 25)); //15
+        entries.add(new Entry(1000000, 50)); //20
+        entries.add(new Entry(1300000, 50)); //30
+        entries.add(new Entry(1600000, 70)); //35
+        entries.add(new Entry(1900000, 70)); //43
+        entries.add(new Entry(2300000, 20)); //50
+        entries.add(new Entry(3180000, 20)); //53
+        entries.add(new Entry(3300000, 10)); //53
+
+        LineDataSet dataSet = new LineDataSet(entries, "Your Ride");
+        dataSet.setDrawCircles(false);
+        dataSet.setDrawValues(false);
+        dataSet.setColor(R.color.colorPrimaryDark);
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSet.setCubicIntensity(0.08f);
+        LineData lineData = new LineData(dataSet);
+        mLineChart.setData(lineData);
+        mLineChart.invalidate();*/
+
+        /* ------ END DEBUG ------- */
+
         new AsyncTask<Void, Void, String>() {
             LineData lineData;
             boolean hasData;
@@ -278,6 +303,35 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
 
         mGoogleMap = googleMap;
 //        mGoogleMap.getUiSettings().setScrollGesturesEnabled(false);
+
+        /* ------ DEBUG ------- */
+
+        /*MarkerOptions markerOptionsStart = new MarkerOptions();
+        MarkerOptions markerOptionsEnd = new MarkerOptions();
+        markerOptionsStart.position(new LatLng(44.229, -76.505)).title("Start");
+        markerOptionsEnd.position(new LatLng(44.231249, -76.508709)).title("End");
+        PolylineOptions options = new PolylineOptions()
+                .add(new LatLng(44.229, -76.505))
+                .add(new LatLng(44.231437, -76.504998))
+                .add(new LatLng(44.231693, -76.495769))
+                .add(new LatLng(44.232637, -76.495790))
+                .add(new LatLng(44.232637, -76.495790))
+                .add(new LatLng(44.233959, -76.498933))
+                .add(new LatLng(44.235890, -76.499100))
+                .add(new LatLng(44.238750, -76.505895))
+                .add(new LatLng(44.233980, -76.505299))
+                .add(new LatLng(44.233842, -76.508979))
+                .add(new LatLng(44.231249, -76.508709))
+                .color(Color.BLUE);
+
+        mGoogleMap.addMarker(markerOptionsStart);
+        mGoogleMap.addMarker(markerOptionsEnd);
+        mGoogleMap.addPolyline(options);
+
+        LatLngBounds BOUNDS = new LatLngBounds(new LatLng(44.225458, -76.508012), new LatLng(44.238648, -76.487929));
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(BOUNDS, 15));*/
+
+        /* ------ END DEBUG ------- */
 
         new AsyncTask<Void, Void, String>() {
             LatLngBounds BOUNDS;
