@@ -7,5 +7,5 @@ import me.jonahchin.musclebike.Entities.Ride;
  */
 
 public interface HistoryListCallbacks {
-    void onListItemClick(Ride ride);
+    void onListItemClick(Ride ride, boolean backStack);
 }

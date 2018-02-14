@@ -160,14 +160,22 @@ public class MainActivity extends AppCompatActivity implements HistoryListCallba
 
 
     @Override
-    public void onListItemClick(Ride ride) {
+    public void onListItemClick(Ride ride, boolean backStack) {
 
         Fragment fragment = ResultsFragment.newInstance(ride);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.primary_container, fragment)
-                .addToBackStack("hi")
-                .commit();
+
+        if(backStack) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.primary_container, fragment)
+                    .addToBackStack("hi")
+                    .commit();
+        }else{
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.primary_container, fragment)
+                    .commit();
+        }
     }
 
     @Override

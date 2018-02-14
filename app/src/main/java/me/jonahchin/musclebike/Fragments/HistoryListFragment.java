@@ -60,7 +60,7 @@ public class HistoryListFragment extends Fragment {
         mHistoryAdapter.setClickListener(new HistoryListAdapter.onItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                mCallbacks.onListItemClick(mRideList.get(position));
+                mCallbacks.onListItemClick(mRideList.get(position), true);
             }
         });
 

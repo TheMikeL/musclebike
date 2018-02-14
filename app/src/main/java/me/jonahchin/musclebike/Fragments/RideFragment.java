@@ -145,7 +145,7 @@ public class RideFragment extends Fragment {
                 mPyRef.setValue(false);
                 handler.removeCallbacksAndMessages(runnable);
                 ((MainActivity) getActivity()).mBottomNav.setVisibility(View.VISIBLE);
-                mCallbacks.onListItemClick(mCurrentRide);
+                mCallbacks.onListItemClick(mCurrentRide, false);
 
             }
         });
