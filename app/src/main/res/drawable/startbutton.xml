@@ -2,10 +2,10 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="false">
         <shape android:shape="oval">
-            <solid android:color="#fff"/>
+            <solid android:color="@color/colorPrimaryDark"/>
             <stroke
-                android:width="8dp"
-                android:color="#265930" />
+                android:width="4dp"
+                android:color="@color/colorAccent" />
             <corners android:bottomRightRadius="8dp"
                 android:bottomLeftRadius="8dp"
                 android:topRightRadius="8dp"
@@ -18,10 +18,10 @@
     </item>
     <item android:state_pressed="true">
         <shape android:shape="oval">
-            <solid android:color="#eee"/>
+            <solid android:color="@color/colorPrimary"/>
             <stroke
-                android:width="8dp"
-                android:color="#1f4927" />
+                android:width="4dp"
+                android:color="@color/colorAccent" />
             <corners android:bottomRightRadius="8dp"
                 android:bottomLeftRadius="8dp"
                 android:topRightRadius="8dp"

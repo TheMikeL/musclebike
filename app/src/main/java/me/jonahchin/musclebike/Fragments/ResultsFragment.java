@@ -23,6 +23,7 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -107,8 +108,6 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
         mCadenceText = view.findViewById(R.id.cadence_data_text);
         mSpeedText = view.findViewById(R.id.speed_data_text);
 
-
-
         mDistanceText.setText(String.format("%.1f", mCurrentRide.getDistance()));
         mTimeText.setText(StringUtil.getHourMinuteSecondFromMillis(mCurrentRide.getElapsedTime()));
 
@@ -150,8 +149,8 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
         mIntensityPie.setCenterText("Intensity");
         mBalancePie.setCenterText("Balance");
 
-        mIntensityPie.setHoleRadius(80);
-        mBalancePie.setHoleRadius(80);
+        mIntensityPie.setHoleRadius(70);
+        mBalancePie.setHoleRadius(70);
 
 //        mIntensityPie.getLegend().setEnabled(false);
 //        mBalancePie.getLegend().setEnabled(false);
@@ -191,18 +190,22 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
                 PieDataSet balanceSet = new PieDataSet(balanceEntries, "");
                 PieDataSet intensitySet = new PieDataSet(intensityEntries, "");
 
-//                balanceSet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
-//                intensitySet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
-
 
                 intensitySet.setSliceSpace(5);
                 balanceSet.setSliceSpace(5);
 
-                balanceSet.setColors(new int[] { android.R.color.holo_red_light, android.R.color.holo_green_light}, getContext());
-                intensitySet.setColors(new int[] { android.R.color.holo_red_light, android.R.color.holo_green_light, android.R.color.holo_blue_light}, getContext());
+                balanceSet.setColors(new int[] { R.color.colorPrimary, R.color.colorSecondary}, getContext());
+                intensitySet.setColors(new int[] { R.color.colorPrimary, R.color.colorSecondary, R.color.colorTertiary}, getContext());
 
                 balanceData = new PieData(balanceSet);
                 intensityData = new PieData(intensitySet);
+
+                balanceData.setValueTextColor(Color.WHITE);
+                intensityData.setValueTextColor(Color.WHITE);
+                balanceData.setValueFormatter(new PercentFormatter());
+                intensityData.setValueFormatter(new PercentFormatter());
+
+
 
                 return "Complete";
             }
@@ -250,6 +253,7 @@ public class ResultsFragment extends Fragment implements OnMapReadyCallback {
                 }
 
                 LineDataSet dataSet = new LineDataSet(entries, "Your Ride");
+                dataSet.setDrawCircles(false);
                 dataSet.setDrawValues(false);
                 dataSet.setColor(R.color.colorPrimaryDark);
                 lineData = new LineData(dataSet);

@@ -43,7 +43,6 @@ public class HistoryListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_history_list, container, false);
-        Log.e(TAG, "Creating view for history frag");
 
         mTitle = view.findViewById(R.id.title_bar_title);
         mTitle.setText("History");
