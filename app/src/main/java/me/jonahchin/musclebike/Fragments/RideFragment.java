@@ -20,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -142,7 +143,6 @@ public class RideFragment extends Fragment {
                 updateRide(total_elapsed_time, distance_covered);
                 stopLocationUpdates();
                 mPyRef.setValue(false);
-                locationCheck = false;
                 handler.removeCallbacksAndMessages(runnable);
                 ((MainActivity) getActivity()).mBottomNav.setVisibility(View.VISIBLE);
                 mCallbacks.onListItemClick(mCurrentRide);
@@ -163,8 +163,7 @@ public class RideFragment extends Fragment {
             public void onSuccess(Location location) {
                 initialLatitude = location.getLatitude();
                 initialLongitude = location.getLongitude();
-                if (initialLatitude < 0 || initialLongitude > 0)
-                    locationCheck = true;
+
                 prevLat = initialLatitude;
                 prevLong = initialLongitude;
                 if (location != null) {
@@ -370,7 +369,7 @@ public class RideFragment extends Fragment {
             protected String doInBackground(Void... params) {
                 RideDatapointDao dataDao = mAppDatabase.rideDatapointDao();
                 RideDatapoint point = new RideDatapoint();
-                if (locationCheck == true) {
+                if (currLat != 0 && currLong != 0) {
                     point.setTimestamp(MillisecondTime);
                     point.setCadence(cadenceVal);
                     point.setMuscle(muscleForce);
