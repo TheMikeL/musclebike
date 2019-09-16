@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "621719140372",
+    "firebase_url": "https://muscle-bike.firebaseio.com",
+    "project_id": "muscle-bike",
+    "storage_bucket": "muscle-bike.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:621719140372:android:a211c94554dc73c4",
+        "android_client_info": {
+          "package_name": "me.jonahchin.musclebike"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "621719140372-nfsi6mvc6bg0lqtrcrv0r6reg7216p5e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMyqHkVXzwH9aVdQ3r4oN2VltsE8kTPf8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
